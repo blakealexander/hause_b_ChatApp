@@ -1,0 +1,21 @@
+{
+  "name": "hause_b_chatapp",
+  "version": "1.0.0",
+  "description": "social media app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blakealexander/hause_b_ChatApp.git"
+  },
+  "author": "blake hause",
+  "license": "ISC",
+
+  "homepage": "https://github.com/blakealexander/hause_b_ChatApp#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^2.2.0"
+  }
+}
