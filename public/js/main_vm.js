@@ -3,18 +3,19 @@ import ChatMessage from './modules/ChatMessage.js';
 const socket = io();
 
 function setUserId({sID, message}) {
-    // debugger;
+    //debugger;
     console.log('connected', sID, message);
     vm.socketID = sID;
+
 }
 
-function appendMessage() {
-    vm.message.push(message);
+function appendMessage(message) {
+    vm.messages.push(message);
 }
 
 const vm = new Vue({
     data: {
-        socketID: "", 
+        socketID: "",
         nickname: "",
         message: "",
         messages: []
@@ -22,13 +23,12 @@ const vm = new Vue({
 
     methods: {
         dispatchMessage() {
-            // send a chat message 
+            // send a chat message
             socket.emit('chat message', { content: this.message, name: this.nickname || "Anonymous"} );
 
             this.message = "";
         }
     },
-
 
     components: {
         newmessage: ChatMessage
