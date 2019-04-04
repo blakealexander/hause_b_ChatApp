@@ -1,5 +1,6 @@
 import ChatMessage from './modules/ChatMessage.js';
 
+
 const socket = io();
 
 function setUserId({sID, message}) {
@@ -13,6 +14,7 @@ function appendMessage(message) {
     vm.messages.push(message);
 }
 
+
 const vm = new Vue({
     data: {
         socketID: "",
@@ -20,6 +22,8 @@ const vm = new Vue({
         message: "",
         messages: []
     },
+
+    
 
     methods: {
         dispatchMessage() {
