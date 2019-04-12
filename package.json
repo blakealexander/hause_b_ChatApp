@@ -1,21 +1,21 @@
 {
-  "name": "hause_b_chatapp",
+  "name": "chat_app_sockets",
   "version": "1.0.0",
-  "description": "social media app",
-  "main": "app.js",
+  "description": "a simple chat application using express.js and socket.io",
+  "main": "index.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/blakealexander/hause_b_ChatApp.git"
-  },
-  "author": "blake hause",
+  "author": "stillNovice",
   "license": "ISC",
-
-  "homepage": "https://github.com/blakealexander/hause_b_ChatApp#readme",
   "dependencies": {
-    "express": "^4.16.4",
-    "socket.io": "^2.2.0"
+    "express": "*",
+    "socket.io": "*",
+    "jquery-emoji-picker": "*"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.26.3",
+    "gulp": "^4.0.0"
   }
 }

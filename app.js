@@ -1,41 +1,137 @@
-// initialize an express app and set it up 
-const express = require('express');
-const app = express();
-const io = require('socket.io')();
+const path = require('path');
+var express = require('express');
+var app = express();
+//app.listen(process.env.PORT || 3000);
 
-// some config stuff
-const port = process.env.PORT || 3000;
+var server = require('http').createServer(app);
 
-// tell our app to use the public folder for static files
-app.use(express.static('public'));
+var socketServer = require('socket.io')(server.listen(process.env.PORT || 3000));
 
-// instantiate the only route we need
-app.get('/', (req, res, next) => {
-    res.sendFile(__dirname + '/views/index.html');
+// serving static files.
+app.use(express.static(path.join(__dirname, 'public')));
+
+// setting up main route.
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/views/index.html');
 });
 
-// create server variable for socket.io to use
-const server = app.listen(port, () => {
-    console.log(`app is running on port ${port}`);
-});
+var allUsers = [];  // array of "all users" Active
+var typingUsersSet = [];  // array of all UNIQUE users currently Typing
 
-// plug in the chat app package
-io.attach(server);
+socketServer.sockets.on("connection", function(socket) {
+  console.log('connected at serverside - ', socket.id);
 
-io.on('connection', function(socket) {
-    console.log('a user has connected');
-    socket.emit('connected', {sID: `${socket.id}`, message: 'new connection'} );
+  /* SECTION - receiving the message from user input and firing an event that will display the message on UI. */
+  socket.on("oldMessage", function(data) {
+    socketServer.sockets.emit("newMessage", {msg: data.msg, user: socket.currentUser});
+  });
 
-    // listen for incoming messages, and then send them to everyone
-    socket.on('chat message', function(msg) {
-        // check the message contents
-        console.log('message', msg, 'socket', socket.id);
+  /* SECTION - adding the current user in "all users" list and then firing an event that displays all users on UI. */
+  socket.on("thisUser", function(data) {
+    socket.currentUser = data.user;
+    socket.userStatus = data.onlineStatus;
 
-        // send a message to every connected client
-        io.emit('chat message', { id: `${socket.id}`, message: msg });
+    // pushing the current user in "all users" array.
+    allUsers.push({
+      id: socket.id,                  // storing user id.
+      user: socket.currentUser,       // storing user name.
+      status: socket.userStatus       // storing user status as Offline or Away.
     });
 
-    socket.on('disconnect', function() {
-        console.log('a user has disconnected');
+    // server emitting "all-Users" event to show "all users" name on the Page.
+    socketServer.sockets.emit("all-Users", allUsers);
+  });
+
+  /* SECTION - Operations done after the socket gets disconnected. */
+  socket.on('disconnect', function(data) {
+    console.log('disconnected at serverside - ', socket.id);
+    // removing the user if the socket connection ends.
+
+    // removing the user with id equal current sockets id(disconnected socket) from "all users" list.
+    var tempAllUsers = [];
+    tempAllUsers = allUsers.filter(function(item) {
+      return item.id != socket.id;
     });
+
+    allUsers = tempAllUsers.slice();
+
+    // removing typing user if the socket connection ends.
+
+    // removing the user with id equal current sockets id(disconnected socket) from "typing users" list.
+    var tempTypingUsersSet = [];
+    tempTypingUsersSet = typingUsersSet.filter(function(item) {
+      return item.uId != socket.id;
+    });
+    typingUsersSet = tempTypingUsersSet.slice();
+
+    // after removing the disconnected user, show the remaining users on the Page.
+    socketServer.sockets.emit("all-Users", allUsers);
+
+    // getting the unique set of "typing users".
+    var uniqArr = typingUsersSet.filter(function(item, idx) {
+      return typingUsersSet.indexOf(item) == idx;
+    });
+
+    typingUsersSet = uniqArr.slice();
+
+    // showing the name of the users currently typing on the UI.
+    socketServer.sockets.emit('showTypingUsers', typingUsersSet);
+  });
+
+  /* SECTION - Update the current user's status as Online/Away  */
+  socket.on('updateUserStatus', function(status) {
+    for (var i = 0; i < allUsers.length; i++) {
+      if(allUsers[i].id == socket.id) {
+        allUsers[i].status = status;
+        socket.userStatus = status;
+        break;
+      }
+    }
+
+    // update the current user's status and fire an event that will show the status on UI.
+    socketServer.sockets.emit("all-Users", allUsers);
+  });
+
+  /* SECTION - adding the current user in the typingUsersSet */
+  socket.on('addTypingUsers', function() {
+    // adding the current user in "typing users" list.
+    typingUsersSet.push({
+      uId: socket.id,             // current users id.
+      uName: socket.currentUser   // current users name.
+    });
+
+    var uniqArr = typingUsersSet.filter(function(item, idx) {
+      return typingUsersSet.indexOf(item) == idx;
+    });
+
+    typingUsersSet = uniqArr.slice();
+
+    // after adding the current user in the "typing users" list, show all the active typing as typing on UI.
+    socketServer.sockets.emit('showTypingUsers', typingUsersSet);
+  });
+
+  /* SECTION - removing the current user from the typingUsersSet */
+  socket.on('removeTypingUsers', function() {
+    // removing the current user from "typing users" list.
+    var tempTypingUsersSet = [];
+    tempTypingUsersSet = typingUsersSet.filter(function(item) {
+      return item.uId != socket.id;
+    });
+    typingUsersSet = tempTypingUsersSet.slice();
+
+    var uniqArr = typingUsersSet.filter(function(item, idx) {
+      return typingUsersSet.indexOf(item) == idx;
+    });
+
+    typingUsersSet = uniqArr.slice();
+
+    // after adding the current user in the "typing users" list, show all the active typing as typing on UI.
+    socketServer.sockets.emit('showTypingUsers', typingUsersSet);
+  });
+
+  socket.on('error', function(err) {
+    console.error(err);
+  })
 });
+
+
