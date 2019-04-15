@@ -1,12 +1,11 @@
 # Blakes Chat App
 A group chat web application that can run on multiple clients on same network. Made usin Node.js, Express.js, Socket.io, Jquery-emoji-picker, HTML and CSS.
 
-$ git clone https://github.com/stillNovice/Lets-Chat.git
-$ cd Lets-Chat
+
 $ npm install
 $ mkdir public/css && cp -r node_modules/jquery-emoji-picker/css/* public/css/
 $ mkdir public/js && cp -r node_modules/jquery-emoji-picker/js/* public/js/
-$ node app.js
+$ npm start
 
 ```
 # Usage
